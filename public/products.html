@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Products</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body data-page="products">
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-row">
+          <img class="brand-logo" src="/images/jeskin-logo.svg" alt="JESKIN POS logo" />
+          <h2>JESKIN POS</h2>
+        </div>
+        <nav class="nav">
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/checkout.html">Checkout</a>
+          <a href="/products.html" class="active">Products</a>
+          <a href="/inventory.html">Inventory</a>
+          <a href="/sales.html">Sales History</a>
+          <a href="/reports.html">Reports</a>
+          <a href="/users.html">Users</a>
+          <button id="logoutBtn" class="link-btn danger">Logout</button>
+        </nav>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <h1>Products</h1>
+          <span id="currentUserBadge" class="badge neutral">Loading...</span>
+        </header>
+
+        <section class="panel">
+          <div class="toolbar-row">
+            <input id="searchInput" type="search" placeholder="Search by name or barcode" />
+            <button id="refreshProductsBtn" class="secondary-btn">Refresh</button>
+          </div>
+
+          <form id="productForm" class="stack-form">
+            <input type="hidden" id="productId" />
+            <div class="form-grid">
+              <label>Category
+                <select id="categoryId"></select>
+              </label>
+              <label>Name
+                <input id="productName" type="text" required />
+              </label>
+              <label>Barcode
+                <input id="productBarcode" type="text" required />
+              </label>
+              <label>Price
+                <input id="productPrice" type="number" min="0" step="0.01" required />
+              </label>
+              <label>Cost Price
+                <input id="productCostPrice" type="number" min="0" step="0.01" required />
+              </label>
+              <label>Stock
+                <input id="productStock" type="number" min="0" step="1" />
+              </label>
+              <label>Low-stock threshold
+                <input id="productThreshold" type="number" min="0" step="1" value="5" />
+              </label>
+              <label>Active
+                <select id="productIsActive">
+                  <option value="1">Yes</option>
+                  <option value="0">No</option>
+                </select>
+              </label>
+            </div>
+            <div class="action-row">
+              <button type="submit" class="primary-btn">Save Product</button>
+              <button type="button" id="resetProductBtn" class="secondary-btn">Clear</button>
+            </div>
+            <div id="productError" class="form-message error hidden"></div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Barcode</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="productsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/js/app.js"></script>
+  </body>
+</html>

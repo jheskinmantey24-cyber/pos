@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body data-page="checkout">
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-row">
+          <img class="brand-logo" src="/images/jeskin-logo.svg" alt="JESKIN POS logo" />
+          <h2>JESKIN POS</h2>
+        </div>
+        <nav class="nav">
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/checkout.html" class="active">Checkout</a>
+          <a href="/products.html">Products</a>
+          <a href="/inventory.html">Inventory</a>
+          <a href="/sales.html">Sales History</a>
+          <a href="/reports.html">Reports</a>
+          <a href="/users.html">Users</a>
+          <button id="logoutBtn" class="link-btn danger">Logout</button>
+        </nav>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <h1>Checkout</h1>
+          <span id="currentUserBadge" class="badge neutral">Loading...</span>
+        </header>
+
+        <section class="checkout-layout">
+          <div class="panel cart-panel">
+            <div class="toolbar-row">
+              <input id="barcodeInput" type="text" placeholder="Scan barcode or search item" />
+              <button id="addProductByBarcodeBtn" class="secondary-btn">Add</button>
+            </div>
+
+            <div id="cartItems" class="cart-items"></div>
+          </div>
+
+          <div class="panel summary-panel">
+            <h3>Order summary</h3>
+            <div class="summary-line"><span>Subtotal</span><strong id="subtotalValue">GH₵ 0.00</strong></div>
+            <div class="summary-line"><span>Discount</span><strong id="discountValue">GH₵ 0.00</strong></div>
+            <div class="summary-line"><span>VAT</span><strong id="vatValue">GH₵ 0.00</strong></div>
+            <div class="summary-line total"><span>Total</span><strong id="totalValue">GH₵ 0.00</strong></div>
+
+            <label>
+              Discount amount
+              <input id="discountInput" type="number" min="0" step="0.01" value="0" />
+            </label>
+
+            <label>
+              Payment method
+              <select id="paymentMethod">
+                <option value="cash">Cash</option>
+                <option value="mobile_money">Mobile Money</option>
+                <option value="card">Card</option>
+                <option value="split">Split Payment</option>
+              </select>
+            </label>
+
+            <label>
+              Amount tendered
+              <input id="amountTendered" type="number" min="0" step="0.01" value="0" />
+            </label>
+
+            <div class="summary-line"><span>Change</span><strong id="changeValue">GH₵ 0.00</strong></div>
+
+            <div id="receiptCard" class="receipt-card hidden">
+              <div class="receipt-header">
+                <strong>JESKIN POS</strong>
+                <span id="receiptSaleNumber">Receipt</span>
+              </div>
+              <div id="receiptItems" class="receipt-items"></div>
+              <div class="receipt-totals">
+                <div class="receipt-line"><span>Subtotal</span><strong id="receiptSubtotal">GH₵ 0.00</strong></div>
+                <div class="receipt-line"><span>Discount</span><strong id="receiptDiscount">GH₵ 0.00</strong></div>
+                <div class="receipt-line"><span>VAT</span><strong id="receiptVat">GH₵ 0.00</strong></div>
+                <div class="receipt-line total"><span>Total</span><strong id="receiptTotal">GH₵ 0.00</strong></div>
+                <div class="receipt-line"><span>Cash</span><strong id="receiptCash">GH₵ 0.00</strong></div>
+                <div class="receipt-line"><span>Change</span><strong id="receiptChange">GH₵ 0.00</strong></div>
+              </div>
+              <div class="receipt-actions">
+                <button id="printReceiptBtn" type="button" class="secondary-btn">Print</button>
+                <button id="closeReceiptBtn" type="button" class="link-btn">Close</button>
+              </div>
+            </div>
+
+            <button id="completeSaleBtn" class="primary-btn wide">Complete Sale</button>
+            <div id="checkoutError" class="form-message error hidden"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/js/app.js"></script>
+  </body>
+</html>

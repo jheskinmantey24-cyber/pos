@@ -1,0 +1,16 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="jeskinGradient" x1="16" y1="12" x2="108" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2DD4BF"/>
+      <stop offset="0.5" stop-color="#0C7C59"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#jeskinGradient)"/>
+  <path d="M41 34C41 29.5817 44.5817 26 49 26H82C86.4183 26 90 29.5817 90 34V36.5C90 40.9183 86.4183 44.5 82 44.5H66.5V92.5C66.5 97.5 62.4 101.5 57.5 101.5C52.6 101.5 48.5 97.5 48.5 92.5V44.5H49C44.5817 44.5 41 40.9183 41 36.5V34Z" fill="white"/>
+  <rect x="48" y="58" width="30" height="12" rx="6" fill="#D1FAE5"/>
+  <rect x="48" y="76" width="24" height="12" rx="6" fill="#D1FAE5" opacity="0.9"/>
+  <circle cx="91" cy="40" r="8" fill="#F8FAFC" fill-opacity="0.9"/>
+  <path d="M86 40H96" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M91 35V45" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round"/>
+</svg>

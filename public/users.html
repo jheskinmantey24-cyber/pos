@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Users</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body data-page="users">
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-row">
+          <img class="brand-logo" src="/images/jeskin-logo.svg" alt="JESKIN POS logo" />
+          <h2>JESKIN POS</h2>
+        </div>
+        <nav class="nav">
+          <a href="/dashboard.html">Dashboard</a>
+          <a href="/checkout.html">Checkout</a>
+          <a href="/products.html">Products</a>
+          <a href="/inventory.html">Inventory</a>
+          <a href="/sales.html">Sales History</a>
+          <a href="/reports.html">Reports</a>
+          <a href="/users.html" class="active">Users</a>
+          <button id="logoutBtn" class="link-btn danger">Logout</button>
+        </nav>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <h1>Users</h1>
+          <span id="currentUserBadge" class="badge neutral">Loading...</span>
+        </header>
+
+        <section class="panel">
+          <form id="userForm" class="stack-form">
+            <input type="hidden" id="userId" />
+            <div class="form-grid">
+              <label>Full name<input id="userFullName" type="text" required /></label>
+              <label>Email<input id="userEmail" type="email" required /></label>
+              <label>Password<input id="userPassword" type="password" placeholder="Leave blank to keep current password" /></label>
+              <label>Role
+                <select id="userRole">
+                  <option value="cashier">Cashier</option>
+                  <option value="manager">Manager</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </label>
+            </div>
+            <div class="action-row">
+              <button type="submit" class="primary-btn">Save User</button>
+              <button type="button" id="resetUserBtn" class="secondary-btn">Clear</button>
+            </div>
+            <div id="userError" class="form-message error hidden"></div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/js/app.js"></script>
+  </body>
+</html>

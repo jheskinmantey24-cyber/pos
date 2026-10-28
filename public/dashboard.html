@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body data-page="dashboard">
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-row">
+          <img class="brand-logo" src="/images/jeskin-logo.svg" alt="JESKIN POS logo" />
+          <h2>JESKIN POS</h2>
+        </div>
+        <nav class="nav">
+          <a href="/dashboard.html" class="active">Dashboard</a>
+          <a href="/checkout.html">Checkout</a>
+          <a href="/products.html">Products</a>
+          <a href="/inventory.html">Inventory</a>
+          <a href="/sales.html">Sales History</a>
+          <a href="/reports.html">Reports</a>
+          <a href="/users.html">Users</a>
+          <button id="logoutBtn" class="link-btn danger">Logout</button>
+        </nav>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <h1>Overview</h1>
+          <span id="currentUserBadge" class="badge neutral">Loading...</span>
+        </header>
+
+        <section class="stats-grid">
+          <article class="stat-card accent">
+            <span>Products</span>
+            <strong id="productCount">0</strong>
+          </article>
+          <article class="stat-card success">
+            <span>Low Stock</span>
+            <strong id="lowStockCount">0</strong>
+          </article>
+          <article class="stat-card warning">
+            <span>Today's Sales</span>
+            <strong id="todaySales">GH₵ 0.00</strong>
+          </article>
+          <article class="stat-card info">
+            <span>Cashiers</span>
+            <strong id="cashierCount">0</strong>
+          </article>
+        </section>
+
+        <section class="dashboard-visual-grid">
+          <div class="panel chart-panel">
+            <div class="panel-header-row">
+              <h3>Sales trend</h3>
+              <span class="mini-pill success">+12.4%</span>
+            </div>
+            <svg viewBox="0 0 380 180" class="line-chart" aria-label="Sample sales trend chart">
+              <defs>
+                <linearGradient id="chartGlow" x1="0" x2="1">
+                  <stop offset="0%" stop-color="#0f766e" stop-opacity="0.35" />
+                  <stop offset="100%" stop-color="#0f766e" stop-opacity="0.05" />
+                </linearGradient>
+              </defs>
+              <g class="chart-grid-lines">
+                <line x1="20" y1="20" x2="360" y2="20" />
+                <line x1="20" y1="60" x2="360" y2="60" />
+                <line x1="20" y1="100" x2="360" y2="100" />
+                <line x1="20" y1="140" x2="360" y2="140" />
+              </g>
+              <path d="M20 128 C80 118, 110 82, 150 92 S220 56, 260 68 S320 42, 360 34 L360 160 L20 160 Z" fill="url(#chartGlow)" />
+              <path d="M20 128 C80 118, 110 82, 150 92 S220 56, 260 68 S320 42, 360 34" fill="none" stroke="#0f766e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+              <g class="chart-points">
+                <circle cx="20" cy="128" r="4" />
+                <circle cx="150" cy="92" r="4" />
+                <circle cx="260" cy="68" r="4" />
+                <circle cx="360" cy="34" r="4" />
+              </g>
+            </svg>
+            <div class="chart-label-row">
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+            </div>
+          </div>
+
+          <div class="panel chart-panel donut-panel">
+            <div class="panel-header-row">
+              <h3>Category mix</h3>
+              <span class="mini-pill neutral">Live</span>
+            </div>
+            <div class="donut-wrap">
+              <div class="donut-chart" aria-label="Sample category mix chart">
+                <div class="donut-center">
+                  <strong>68%</strong>
+                  <small>Top category</small>
+                </div>
+              </div>
+              <ul class="legend-list">
+                <li><span class="legend-dot teal"></span> Food & drink</li>
+                <li><span class="legend-dot gold"></span> Household</li>
+                <li><span class="legend-dot blue"></span> Beauty</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="panel chart-panel">
+            <div class="panel-header-row">
+              <h3>Top selling items</h3>
+              <span class="mini-pill info">This week</span>
+            </div>
+            <div class="bars-list">
+              <div class="bar-row">
+                <span>Rice packs</span>
+                <div class="bar-track"><span class="bar-fill fill-one" style="width: 82%"></span></div>
+                <strong>82%</strong>
+              </div>
+              <div class="bar-row">
+                <span>Soap</span>
+                <div class="bar-track"><span class="bar-fill fill-two" style="width: 68%"></span></div>
+                <strong>68%</strong>
+              </div>
+              <div class="bar-row">
+                <span>Juice</span>
+                <div class="bar-track"><span class="bar-fill fill-three" style="width: 55%"></span></div>
+                <strong>55%</strong>
+              </div>
+              <div class="bar-row">
+                <span>Biscuits</span>
+                <div class="bar-track"><span class="bar-fill fill-four" style="width: 44%"></span></div>
+                <strong>44%</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel product-showcase-panel">
+          <div class="panel-header-row">
+            <h3>Popular products</h3>
+            <span class="mini-pill neutral">20 items</span>
+          </div>
+
+          <div class="product-showcase-grid">
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1586201375761-83865001a7a7?auto=format&fit=crop&w=800&q=80" alt="Rice pack" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Rice</span>
+                <strong>Rice Pack</strong>
+                <small>GH₵ 18.50</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=800&q=80" alt="Bath soap" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Soap</span>
+                <strong>Bath Soap</strong>
+                <small>GH₵ 6.80</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=800&q=80" alt="Biscuits" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Snacks</span>
+                <strong>Biscuits</strong>
+                <small>GH₵ 4.20</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1622483767028-3f66f2b7420a?auto=format&fit=crop&w=800&q=80" alt="Orange juice" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Drink</span>
+                <strong>Orange Juice</strong>
+                <small>GH₵ 8.90</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80" alt="Body lotion" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Beauty</span>
+                <strong>Body Lotion</strong>
+                <small>GH₵ 15.00</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80" alt="Cleaning foam" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Home</span>
+                <strong>Cleaning Foam</strong>
+                <small>GH₵ 11.25</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80" alt="Tomato paste" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Food</span>
+                <strong>Tomato Paste</strong>
+                <small>GH₵ 5.55</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80" alt="Bread loaf" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Bakery</span>
+                <strong>Bread Loaf</strong>
+                <small>GH₵ 7.40</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=800&q=80" alt="Mineral water" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Drink</span>
+                <strong>Mineral Water</strong>
+                <small>GH₵ 3.20</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80" alt="Notebook" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Office</span>
+                <strong>Notebook</strong>
+                <small>GH₵ 9.00</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&w=800&q=80" alt="Cooking oil" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Kitchen</span>
+                <strong>Cooking Oil</strong>
+                <small>GH₵ 24.00</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80" alt="Shampoo" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Hair</span>
+                <strong>Shampoo</strong>
+                <small>GH₵ 12.50</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=800&q=80" alt="Plantain chips" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Snack</span>
+                <strong>Plantain Chips</strong>
+                <small>GH₵ 6.20</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=800&q=80" alt="Chicken cuts" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Meat</span>
+                <strong>Chicken Cuts</strong>
+                <small>GH₵ 19.80</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=800&q=80" alt="Bananas" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Fruit</span>
+                <strong>Bananas</strong>
+                <small>GH₵ 5.00</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=800&q=80" alt="Toothpaste" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Health</span>
+                <strong>Toothpaste</strong>
+                <small>GH₵ 8.30</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&w=800&q=80" alt="Pencil set" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">School</span>
+                <strong>Pencil Set</strong>
+                <small>GH₵ 3.90</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80" alt="Face powder" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Cosmetic</span>
+                <strong>Face Powder</strong>
+                <small>GH₵ 16.10</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1574170569388-a53d4f4d5d55?auto=format&fit=crop&w=800&q=80" alt="Yogurt" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Drink</span>
+                <strong>Yogurt</strong>
+                <small>GH₵ 7.50</small>
+              </div>
+            </div>
+            <div class="product-mini-card">
+              <img src="https://images.unsplash.com/photo-1582515073490-39981397c445?auto=format&fit=crop&w=800&q=80" alt="Flour bag" />
+              <div class="product-mini-meta">
+                <span class="product-mini-tag">Staple</span>
+                <strong>Flour Bag</strong>
+                <small>GH₵ 21.20</small>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel-grid two-col">
+          <div class="panel">
+            <h3>Low stock alerts</h3>
+            <div id="lowStockList" class="list-box"></div>
+          </div>
+
+          <div class="panel">
+            <h3>Recent sales</h3>
+            <div id="recentSalesList" class="list-box"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/js/app.js"></script>
+  </body>
+</html>
