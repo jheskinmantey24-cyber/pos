@@ -57,6 +57,14 @@ function escapeHtml(value) {
     .replace(/'/g, '&#039;');
 }
 
+function debounce(fn, wait = 300) {
+  let timer = null;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), wait);
+  };
+}
+
 function mountUserBadge(user) {
   if (currentUserBadge) {
     currentUserBadge.textContent = `${user.full_name || user.email || 'User'} (${user.role || 'user'})`;
@@ -291,9 +299,89 @@ async function initCheckout() {
 
   const barcodeInput = document.getElementById('barcodeInput');
   const addBtn = document.getElementById('addProductByBarcodeBtn');
+  const errorBox = document.getElementById('checkoutError');
 
-  const productsResponse = await apiFetch('/products');
-  const products = productsResponse.products || [];
+  let productsResponse = await apiFetch('/products');
+  let products = productsResponse.products || [];
+  let activeCheckoutCategory = '';
+
+  function checkoutCategories() {
+    const seen = new Map();
+    products.forEach((product) => {
+      if (!seen.has(product.category_id)) {
+        seen.set(product.category_id, product.category_name || `Category ${product.category_id}`);
+      }
+    });
+    return Array.from(seen, ([id, name]) => ({ id, name }));
+  }
+
+  function renderCategoryBar() {
+    const categoryBar = document.getElementById('categoryBar');
+    if (!categoryBar) return;
+
+    const categories = checkoutCategories();
+    categoryBar.innerHTML = categories.length <= 1
+      ? ''
+      : ['All', ...categories].map((category) => {
+          const value = category === 'All' ? '' : category.id;
+          const label = category === 'All' ? 'All' : escapeHtml(category.name);
+          const active = activeCheckoutCategory === value ? ' category-chip active' : ' category-chip';
+          return `<button type="button" class="${active}" data-category="${value}">${label}</button>`;
+        }).join('');
+  }
+
+  function visibleProducts() {
+    const term = (barcodeInput?.value || '').trim().toLowerCase();
+    return products.filter((product) =>
+      (!activeCheckoutCategory || String(product.category_id) === String(activeCheckoutCategory)) &&
+      (!term || product.name.toLowerCase().includes(term) || String(product.barcode).includes(term))
+    );
+  }
+
+  function renderProductTiles() {
+    const tiles = document.getElementById('productTiles');
+    if (!tiles) return;
+
+    const visible = visibleProducts();
+
+    if (!visible.length) {
+      tiles.innerHTML = '<span class="tiles-empty">No matching products.</span>';
+      return;
+    }
+
+    tiles.innerHTML = visible.map((product) => {
+      const outOfStock = Number(product.stock) <= 0;
+      const stateClass = outOfStock ? ' product-tile sold-out' : ' product-tile';
+      return `
+        <button type="button" class="${stateClass}" ${outOfStock ? 'disabled' : ''}
+          data-tile-product="${product.id}" title="${escapeHtml(product.name)} — ${formatCurrency(product.price)}">
+          <span class="tile-name">${escapeHtml(product.name)}</span>
+          <span class="tile-meta">${formatCurrency(product.price)} · ${product.stock} left</span>
+        </button>
+      `;
+    }).join('');
+  }
+
+  function refreshTiles() {
+    renderCategoryBar();
+    renderProductTiles();
+  }
+
+  document.getElementById('categoryBar')?.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-category]');
+    if (!button) return;
+    activeCheckoutCategory = button.dataset.category;
+    refreshTiles();
+  });
+
+  document.getElementById('productTiles')?.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-tile-product]');
+    if (!button) return;
+    const product = products.find((item) => String(item.id) === String(button.dataset.tileProduct));
+    if (product) addCartItem(product);
+  });
+
+  barcodeInput?.addEventListener('input', debounce(() => renderProductTiles(), 250));
 
   const addFromBarcode = async () => {
     const value = barcodeInput.value.trim();
@@ -391,6 +479,15 @@ async function initCheckout() {
       document.getElementById('discountInput').value = 0;
       updateSummary();
       document.getElementById('checkoutError')?.classList.add('hidden');
+
+      // Refresh product data so tile stock counts stay accurate for the next customer.
+      try {
+        productsResponse = await apiFetch('/products');
+        products = productsResponse.products || [];
+        refreshTiles();
+      } catch {
+        // Keep showing the previous product data if the refresh fails.
+      }
     } catch (error) {
       const errorBox = document.getElementById('checkoutError');
       if (errorBox) {
@@ -399,6 +496,9 @@ async function initCheckout() {
       }
     }
   });
+
+  refreshTiles();
+  barcodeInput?.focus();
 
   renderCart();
   updateSummary();
@@ -411,37 +511,86 @@ async function initProductsPage() {
   await loadProducts();
 
   const searchInput = document.getElementById('searchInput');
+  const categoryFilter = document.getElementById('categoryFilter');
   const form = document.getElementById('productForm');
   const resetBtn = document.getElementById('resetProductBtn');
 
-  searchInput?.addEventListener('input', async () => {
-    await loadProducts(searchInput.value.trim());
+  const searchChanged = debounce(() => loadProducts(searchInput.value.trim(), categoryFilter?.value || ''));
+  searchInput?.addEventListener('input', searchChanged);
+
+  categoryFilter?.addEventListener('change', () => {
+    loadProducts(searchInput.value.trim(), categoryFilter.value);
+  });
+
+  document.getElementById('newCategoryBtn')?.addEventListener('click', async () => {
+    const nameInput = document.getElementById('newCategoryName');
+    const name = (nameInput?.value || '').trim();
+    if (!name) {
+      showError('productError', 'Enter a category name first.');
+      return;
+    }
+
+    try {
+      await apiFetch('/products/categories', {
+        method: 'POST',
+        headers: jsonHeaders(),
+        body: JSON.stringify({ name }),
+      });
+      if (nameInput) nameInput.value = '';
+      await loadCategories();
+      const select = document.getElementById('categoryId');
+      const options = Array.from(select?.options || []);
+      const created = options.find((option) => option.textContent.toLowerCase() === name.toLowerCase());
+      if (select && created) select.value = created.value;
+    } catch (error) {
+      showError('productError', error.message);
+    }
   });
 
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const nameInput = document.getElementById('productName');
+    const barcodeInput = document.getElementById('productBarcode');
+    const priceInput = document.getElementById('productPrice');
+    const costInput = document.getElementById('productCostPrice');
+
     const payload = {
       category_id: Number(document.getElementById('categoryId').value),
-      name: document.getElementById('productName').value,
-      barcode: document.getElementById('productBarcode').value,
-      price: Number(document.getElementById('productPrice').value),
-      cost_price: Number(document.getElementById('productCostPrice').value),
+      name: nameInput.value,
+      // Blank barcode is fine — the server auto-generates a unique one.
+      barcode: barcodeInput.value.trim(),
+      price: Number(priceInput.value),
+      // Blank cost price defaults to the sale price.
+      cost_price: costInput.value === '' ? Number(priceInput.value) : Number(costInput.value),
       stock: Number(document.getElementById('productStock').value || 0),
       low_stock_threshold: Number(document.getElementById('productThreshold').value || 5),
       is_active: Number(document.getElementById('productIsActive').value),
     };
 
     const productId = document.getElementById('productId').value;
+    const isEdit = Boolean(productId);
 
     try {
-      if (productId) {
+      if (isEdit) {
         await apiFetch(`/products/${productId}`, { method: 'PUT', headers: jsonHeaders(), body: JSON.stringify(payload) });
       } else {
         await apiFetch('/products', { method: 'POST', headers: jsonHeaders(), body: JSON.stringify(payload) });
       }
-      form.reset();
-      document.getElementById('productId').value = '';
-      await loadProducts();
+
+      if (isEdit) {
+        form.reset();
+        document.getElementById('productId').value = '';
+      } else {
+        // Fast add: keep category, threshold and active selected; clear only the item fields.
+        nameInput.value = '';
+        barcodeInput.value = '';
+        priceInput.value = '';
+        costInput.value = '';
+        document.getElementById('productStock').value = '';
+      }
+      await loadProducts('', categoryFilter?.value || '');
+      // Ready for the next product immediately.
+      barcodeInput.focus();
     } catch (error) {
       showError('productError', error.message);
     }
@@ -452,21 +601,49 @@ async function initProductsPage() {
     document.getElementById('productId').value = '';
   });
 
-  document.getElementById('refreshProductsBtn')?.addEventListener('click', () => loadProducts());
+  document.getElementById('refreshProductsBtn')?.addEventListener('click', () => {
+    loadProducts(document.getElementById('searchInput')?.value.trim() || '', categoryFilter?.value || '');
+  });
+
+  // Scanner flow: Enter/scan in the barcode field jumps straight to the name.
+  document.getElementById('productBarcode')?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      document.getElementById('productName')?.focus();
+    }
+  });
+
+  // Start the fast-add flow with the barcode field ready for scanning.
+  document.getElementById('productBarcode')?.focus();
 }
 
 async function loadCategories() {
   const categories = await apiFetch('/products/categories');
-  const select = document.getElementById('categoryId');
-  if (!select) return;
-  select.innerHTML = (categories.categories || []).map((category) => `
-    <option value="${category.id}">${escapeHtml(category.name)}</option>
-  `).join('');
+  const list = categories.categories || [];
+
+  const formSelect = document.getElementById('categoryId');
+  if (formSelect) {
+    formSelect.innerHTML = list.map((category) => `
+      <option value="${category.id}">${escapeHtml(category.name)}</option>
+    `).join('');
+  }
+
+  const filterSelect = document.getElementById('categoryFilter');
+  if (filterSelect) {
+    const current = filterSelect.value;
+    filterSelect.innerHTML = '<option value="">All categories</option>' + list.map((category) => `
+      <option value="${category.id}">${escapeHtml(category.name)}</option>
+    `).join('');
+    if (current) filterSelect.value = current;
+  }
+
+  return list;
 }
 
-async function loadProducts(search = '') {
+async function loadProducts(search = '', categoryId = '') {
   const params = new URLSearchParams();
   if (search) params.set('search', search);
+  if (categoryId) params.set('category_id', categoryId);
   const response = await apiFetch(`/products?${params.toString()}`);
   const rows = response.products || [];
   const tbody = document.getElementById('productsTableBody');

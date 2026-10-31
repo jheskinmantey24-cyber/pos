@@ -124,62 +124,75 @@ async function createSale(req, res, next) {
       return next(new ApiError(400, 'Each cart item must include a valid product_id and quantity greater than zero.'));
     }
 
-    const productIds = normalizedItems.map((item) => item.product_id);
+    const productIds = [...new Set(normalizedItems.map((item) => item.product_id))];
     const placeholders = productIds.map(() => '?').join(', ');
-    const [productRows] = await db.execute(
-      `SELECT * FROM products WHERE id IN (${placeholders})`,
-      productIds,
-    );
-
-    if (productRows.length !== productIds.length) {
-      return next(new ApiError(400, 'One or more products in the cart do not exist.'));
-    }
-
-    const productMap = new Map(productRows.map((product) => [product.id, product]));
-    const saleItems = [];
-    let subtotal = 0;
-
-    for (const item of normalizedItems) {
-      const product = productMap.get(item.product_id);
-      if (!product || Number(product.is_active) !== 1) {
-        return next(new ApiError(400, `Product ${item.product_id} is unavailable.`));
-      }
-
-      if (Number(product.stock) < item.quantity) {
-        return next(new ApiError(400, `Insufficient stock for product: ${product.name}.`));
-      }
-
-      const unitPrice = Number(product.price);
-      const totalAmount = roundCurrency(unitPrice * item.quantity);
-      subtotal += totalAmount;
-      saleItems.push({
-        product_id: item.product_id,
-        quantity: item.quantity,
-        unit_price: unitPrice,
-        cost_price: Number(product.cost_price),
-        total_amount: totalAmount,
-      });
-    }
-
-    const computedTotals = calculateCartTotals(
-      saleItems.map((item) => ({ unit_price: item.unit_price, quantity: item.quantity })),
-      { discount: Number(discount_amount || 0), vatRate: 0.125 },
-    );
-
-    const normalizedPayments = mapPaymentMethods(payments);
-    if (normalizedPayments.length === 0) {
-      return next(new ApiError(400, 'At least one payment entry is required.'));
-    }
-
-    let totalPaid = normalizedPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-    if (totalPaid < computedTotals.total) {
-      return next(new ApiError(400, 'Total paid is less than the sale total.'));
-    }
 
     const connection = await db.getConnection();
 
     try {
       await connection.beginTransaction();
+
+      const [productRows] = await connection.execute(
+        `SELECT * FROM products WHERE id IN (${placeholders}) FOR UPDATE`,
+        productIds,
+      );
+
+      if (productRows.length !== productIds.length) {
+        await connection.rollback();
+        return next(new ApiError(400, 'One or more products in the cart do not exist.'));
+      }
+
+      const productMap = new Map(productRows.map((product) => [product.id, product]));
+      const aggregatedQuantities = new Map();
+
+      for (const item of normalizedItems) {
+        const current = aggregatedQuantities.get(item.product_id) || 0;
+        aggregatedQuantities.set(item.product_id, current + item.quantity);
+      }
+
+      const saleItems = [];
+      let subtotal = 0;
+
+      for (const [productId, quantity] of aggregatedQuantities.entries()) {
+        const product = productMap.get(productId);
+        if (!product || Number(product.is_active) !== 1) {
+          await connection.rollback();
+          return next(new ApiError(400, `Product ${productId} is unavailable.`));
+        }
+
+        if (Number(product.stock) < quantity) {
+          await connection.rollback();
+          return next(new ApiError(400, `Insufficient stock for product: ${product.name}.`));
+        }
+
+        const unitPrice = Number(product.price);
+        const totalAmount = roundCurrency(unitPrice * quantity);
+        subtotal += totalAmount;
+        saleItems.push({
+          product_id: productId,
+          quantity,
+          unit_price: unitPrice,
+          cost_price: Number(product.cost_price),
+          total_amount: totalAmount,
+        });
+      }
+
+      const computedTotals = calculateCartTotals(
+        saleItems.map((item) => ({ unit_price: item.unit_price, quantity: item.quantity })),
+        { discount: Number(discount_amount || 0), vatRate: 0.125 },
+      );
+
+      const normalizedPayments = mapPaymentMethods(payments);
+      if (normalizedPayments.length === 0) {
+        await connection.rollback();
+        return next(new ApiError(400, 'At least one payment entry is required.'));
+      }
+
+      let totalPaid = normalizedPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+      if (totalPaid < computedTotals.total) {
+        await connection.rollback();
+        return next(new ApiError(400, 'Total paid is less than the sale total.'));
+      }
 
       const saleNumber = buildSaleNumber();
       const [saleResult] = await connection.execute(

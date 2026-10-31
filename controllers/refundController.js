@@ -49,29 +49,48 @@ async function refundSale(req, res, next) {
     }
 
     const sale = saleRows[0];
-    const [existingRefundRows] = await db.execute('SELECT COALESCE(SUM(amount), 0) AS total_refunded FROM refunds WHERE sale_id = ?', [saleId]);
-    const currentRefunded = Number(existingRefundRows[0]?.total_refunded || 0);
-    const remainingBalance = Math.max(Number(sale.net_amount || sale.total_amount) - currentRefunded, 0);
-    const refundAmount = calculateRefundAmount(remainingBalance, Number(amount || remainingBalance));
-
-    if (refundAmount <= 0) {
-      return next(new ApiError(400, 'Refund amount must be greater than zero.'));
-    }
-
-    if (refundAmount > remainingBalance) {
-      return next(new ApiError(400, 'Refund cannot exceed the remaining sale balance.'));
-    }
-
     const [saleItemsRows] = await db.execute('SELECT * FROM sale_items WHERE sale_id = ?', [saleId]);
     const connection = await db.getConnection();
 
     try {
       await connection.beginTransaction();
 
+      const [lockedSaleRows] = await connection.execute('SELECT * FROM sales WHERE id = ? FOR UPDATE', [saleId]);
+      if (!lockedSaleRows.length) {
+        await connection.rollback();
+        return next(new ApiError(404, 'Sale not found.'));
+      }
+
+      const [existingRefundRows] = await connection.execute(
+        'SELECT * FROM refunds WHERE sale_id = ? FOR UPDATE',
+        [saleId],
+      );
+      const currentRefunded = existingRefundRows.reduce((sum, refund) => sum + Number(refund.amount || 0), 0);
+      const remainingBalance = Math.max(Number(lockedSaleRows[0].net_amount || lockedSaleRows[0].total_amount) - currentRefunded, 0);
+      const refundAmount = calculateRefundAmount(remainingBalance, Number(amount || remainingBalance));
+
+      if (refundAmount <= 0) {
+        await connection.rollback();
+        return next(new ApiError(400, 'Refund amount must be greater than zero.'));
+      }
+
+      if (refundAmount > remainingBalance) {
+        await connection.rollback();
+        return next(new ApiError(400, 'Refund cannot exceed the remaining sale balance.'));
+      }
+
+      const productIds = [...new Set(saleItemsRows.map((item) => item.product_id))];
+      const placeholders = productIds.length ? productIds.map(() => '?').join(', ') : 'NULL';
+      const productRows = productIds.length
+        ? (await connection.execute(`SELECT * FROM products WHERE id IN (${placeholders}) FOR UPDATE`, productIds))[0]
+        : [];
+
+      const productMap = new Map(productRows.map((product) => [product.id, product]));
+
       for (const item of saleItemsRows) {
-        const [productRows] = await connection.execute('SELECT * FROM products WHERE id = ? LIMIT 1', [item.product_id]);
-        if (productRows.length) {
-          const updatedStock = Number(productRows[0].stock) + Number(item.quantity);
+        const product = productMap.get(item.product_id);
+        if (product) {
+          const updatedStock = Number(product.stock) + Number(item.quantity);
           await connection.execute('UPDATE products SET stock = ? WHERE id = ?', [updatedStock, item.product_id]);
         }
       }
@@ -82,7 +101,7 @@ async function refundSale(req, res, next) {
       );
 
       const nextTotalRefunded = currentRefunded + refundAmount;
-      const nextStatus = calculateRefundStatus(Number(sale.net_amount || sale.total_amount), nextTotalRefunded);
+      const nextStatus = calculateRefundStatus(Number(lockedSaleRows[0].net_amount || lockedSaleRows[0].total_amount), nextTotalRefunded);
       await connection.execute('UPDATE sales SET status = ? WHERE id = ?', [nextStatus, saleId]);
 
       await connection.commit();

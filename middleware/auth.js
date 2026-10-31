@@ -4,7 +4,9 @@ const { verifyToken } = require('../utils/auth');
 
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const tokenFromHeader = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const tokenFromCookie = req.cookies ? req.cookies.ghana_pos_token : null;
+  const token = tokenFromHeader || tokenFromCookie;
 
   if (!token) {
     return next(new ApiError(401, 'Authentication required.'));

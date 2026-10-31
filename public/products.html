@@ -34,6 +34,9 @@
         <section class="panel">
           <div class="toolbar-row">
             <input id="searchInput" type="search" placeholder="Search by name or barcode" />
+            <select id="categoryFilter" aria-label="Filter by category">
+              <option value="">All categories</option>
+            </select>
             <button id="refreshProductsBtn" class="secondary-btn">Refresh</button>
           </div>
 
@@ -47,31 +50,40 @@
                 <input id="productName" type="text" required />
               </label>
               <label>Barcode
-                <input id="productBarcode" type="text" required />
+                <input id="productBarcode" type="text" placeholder="Scanned or blank = auto" />
               </label>
               <label>Price
                 <input id="productPrice" type="number" min="0" step="0.01" required />
-              </label>
-              <label>Cost Price
-                <input id="productCostPrice" type="number" min="0" step="0.01" required />
-              </label>
-              <label>Stock
-                <input id="productStock" type="number" min="0" step="1" />
-              </label>
-              <label>Low-stock threshold
-                <input id="productThreshold" type="number" min="0" step="1" value="5" />
-              </label>
-              <label>Active
-                <select id="productIsActive">
-                  <option value="1">Yes</option>
-                  <option value="0">No</option>
-                </select>
               </label>
             </div>
             <div class="action-row">
               <button type="submit" class="primary-btn">Save Product</button>
               <button type="button" id="resetProductBtn" class="secondary-btn">Clear</button>
             </div>
+            <details class="more-options">
+              <summary>More options</summary>
+              <div class="form-grid">
+                <label>New category
+                  <input id="newCategoryName" type="text" placeholder="Add a new category" />
+                </label>
+                <button type="button" id="newCategoryBtn" class="secondary-btn">Create category</button>
+                <label>Cost Price
+                  <input id="productCostPrice" type="number" min="0" step="0.01" placeholder="Defaults to price" />
+                </label>
+                <label>Stock
+                  <input id="productStock" type="number" min="0" step="1" placeholder="0" />
+                </label>
+                <label>Low-stock threshold
+                  <input id="productThreshold" type="number" min="0" step="1" value="5" />
+                </label>
+                <label>Active
+                  <select id="productIsActive">
+                    <option value="1">Yes</option>
+                    <option value="0">No</option>
+                  </select>
+                </label>
+              </div>
+            </details>
             <div id="productError" class="form-message error hidden"></div>
           </form>
         </section>

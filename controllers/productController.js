@@ -2,6 +2,12 @@ const db = require('../config/db');
 const { ApiError } = require('../middleware/errorHandler');
 const { isLowStock } = require('../utils/inventory');
 
+// Fast add: generates a unique fallback barcode when none is provided.
+function generateBarcode() {
+  const random = Math.floor(Math.random() * 10000);
+  return `AUTO-${Date.now()}-${random}`;
+}
+
 function sanitizeProduct(product) {
   return {
     id: product.id,
@@ -100,24 +106,26 @@ async function createProduct(req, res, next) {
   } = req.body || {};
 
   try {
-    if (!category_id || !name || !barcode || !price || !cost_price) {
-      return next(new ApiError(400, 'category_id, name, barcode, price, and cost_price are required.'));
+    if (!category_id || !name || price === undefined || price === null || price === '') {
+      return next(new ApiError(400, 'category_id, name, and price are required. Barcode, cost price, and stock are optional.'));
+    }
+
+    // Fast add: blank barcode gets a unique auto-generated one.
+    const trimmedBarcode = barcode ? String(barcode).trim() : generateBarcode();
+    const trimmedName = String(name).trim();
+
+    if (!trimmedName) {
+      return next(new ApiError(400, 'Product name is required.'));
     }
 
     const numericPrice = Number(price);
-    const numericCostPrice = Number(cost_price);
+    // Fast add: blank cost price defaults to the sale price.
+    const numericCostPrice = cost_price === undefined || cost_price === null || cost_price === '' ? numericPrice : Number(cost_price);
     const numericStock = Number(stock);
     const numericThreshold = Number(low_stock_threshold);
 
     if (Number.isNaN(numericPrice) || Number.isNaN(numericCostPrice) || Number.isNaN(numericStock) || Number.isNaN(numericThreshold)) {
       return next(new ApiError(400, 'Price, cost price, stock, and threshold must be numeric values.'));
-    }
-
-    const trimmedName = String(name).trim();
-    const trimmedBarcode = String(barcode).trim();
-
-    if (!trimmedName || !trimmedBarcode) {
-      return next(new ApiError(400, 'Product name and barcode are required.'));
     }
 
     const [categoryRows] = await db.execute('SELECT id FROM categories WHERE id = ? LIMIT 1', [category_id]);
@@ -254,6 +262,38 @@ async function getCategories(req, res, next) {
   }
 }
 
+async function createCategory(req, res, next) {
+  const { name, description } = req.body || {};
+
+  try {
+    const trimmedName = String(name || '').trim();
+
+    if (!trimmedName) {
+      return next(new ApiError(400, 'Category name is required.'));
+    }
+
+    const [existingRows] = await db.execute('SELECT id FROM categories WHERE name = ? LIMIT 1', [trimmedName]);
+    if (existingRows.length) {
+      return next(new ApiError(409, 'A category with this name already exists.'));
+    }
+
+    const [result] = await db.execute(
+      'INSERT INTO categories (name, description) VALUES (?, ?)',
+      [trimmedName, description ? String(description).trim() : null],
+    );
+
+    const [rows] = await db.execute('SELECT * FROM categories WHERE id = ? LIMIT 1', [result.insertId]);
+
+    return res.status(201).json({
+      status: 'success',
+      message: 'Category created successfully.',
+      category: rows[0],
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   listProducts,
   getProductById,
@@ -261,4 +301,5 @@ module.exports = {
   updateProduct,
   deleteProduct,
   getCategories,
+  createCategory,
 };

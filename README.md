@@ -54,6 +54,50 @@ a
    mysql -u root -p < seed.sql
    ```
 
+## Aiven MySQL + Render deployment
+
+### 1. Aiven (one time)
+1. Create a MySQL service and download its **CA certificate**; the project already ships it as `ca.pem` in the repository root (it is a public CA certificate, safe to commit).
+2. Note the connection details shown in the Aiven console: service host, port, user (`avnadmin`), password, and database name (`defaultdb`).
+3. Run schema initialization once against Aiven (from your machine, with a temporary `.env` pointing at Aiven):
+   ```bash
+   npm run init-db
+   ```
+   The script is idempotent (`CREATE TABLE IF NOT EXISTS`) and never drops or alters tables.
+
+### 2. Render (service → Environment)
+Set these environment variables on the backend web service (values only in Render, never in Git):
+
+| Variable | Value |
+|---|---|
+| `NODE_ENV` | `production` |
+| `DB_HOST` | Aiven service host |
+| `DB_PORT` | Aiven service port |
+| `DB_USER` | `avnadmin` |
+| `DB_PASSWORD` | Aiven service password |
+| `DB_NAME` | `defaultdb` |
+| `JWT_SECRET` | random 32+ character secret |
+| `JWT_EXPIRES_IN` | `8h` |
+| `CORS_ORIGIN` | `https://<your-render-service>.onrender.com` (or `*`) |
+
+Optional: `DB_SSL_CA` (certificate path, defaults to `ca.pem`), `DB_CONNECTION_LIMIT` (default `10`).
+
+Build command: `npm install` — Start command: `npm start` (listens on `process.env.PORT` as Render requires). Node >= 18 is declared in `package.json`.
+
+The server exits on startup if required variables are missing or the database connection fails, and only ever logs variable **names** — never values.
+
+### 3. First admin account
+There is **no default admin password** in production. Create the first user by running once in the Render shell:
+```bash
+ADMIN_EMAIL=you@example.com ADMIN_PASSWORD='a-long-random-password' ADMIN_FULL_NAME='Root Admin' npm run create-admin
+```
+Variables are read from the environment only, and neither the email nor password is logged. Do not run the old `seed.sql` against production.
+
+### 4. Verify
+- Health check reports real database connectivity: `GET /api/health` → `{"status":"ok","database":"connected"}` (HTTP 503 when the DB is unreachable).
+- Persistence check: create a product, restart/redeploy the backend in Render, log in, and confirm the product and any sales still exist — data lives in Aiven, so redeploying the app never resets it.
+- Local backups still work with `npm run backup` (mysqldump with the same `DB_*` variables).
+
 ## Run the app
 ```bash
 npm start

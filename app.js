@@ -22,13 +22,26 @@ app.use(helmet({
   },
 }));
 
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error('Origin not allowed by CORS policy'));
+  },
   credentials: true,
 }));
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(require('cookie-parser')());
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

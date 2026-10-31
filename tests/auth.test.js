@@ -2,6 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const bcrypt = require('bcryptjs');
 
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-value-at-least-32-chars';
+
 const { hashPassword, verifyPassword, generateToken, verifyToken } = require('../utils/auth');
 
 test('hashPassword should create a bcrypt hash that matches the original password', async () => {

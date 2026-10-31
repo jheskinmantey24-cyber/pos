@@ -1,4 +1,4 @@
-const db = require('../config/db');
+ const db = require('../config/db');
 const { ApiError } = require('../middleware/errorHandler');
 const { hashPassword, verifyPassword, generateToken } = require('../utils/auth');
 
@@ -52,6 +52,15 @@ async function login(req, res, next) {
       full_name: user.full_name,
     });
 
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 8 * 60 * 60 * 1000,
+    };
+
+    res.cookie('ghana_pos_token', token, cookieOptions);
+
     return res.status(200).json({
       status: 'success',
       message: 'Login successful.',
@@ -64,6 +73,12 @@ async function login(req, res, next) {
 }
 
 async function logout(req, res) {
+  res.clearCookie('ghana_pos_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  });
+
   return res.status(200).json({
     status: 'success',
     message: 'Logout successful.',
