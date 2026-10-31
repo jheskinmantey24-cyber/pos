@@ -21,14 +21,23 @@
           <a href="/sales.html">Sales History</a>
           <a href="/reports.html">Reports</a>
           <a href="/users.html" class="active">Users</a>
-          <button id="logoutBtn" class="link-btn danger">Logout</button>
         </nav>
       </aside>
 
       <main class="main-panel">
         <header class="topbar">
           <h1>Users</h1>
-          <span id="currentUserBadge" class="badge neutral">Loading...</span>
+          <div class="topbar-actions">
+            <span id="currentUserBadge" class="badge neutral">Loading...</span>
+            <button id="logoutBtn" class="logout-btn" type="button" aria-label="Logout" title="Logout">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M10 17l5-5-5-5" />
+                <path d="M15 12H3" />
+                <path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" />
+              </svg>
+              <span>Logout</span>
+            </button>
+          </div>
         </header>
 
         <section class="panel">
