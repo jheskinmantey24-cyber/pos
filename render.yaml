@@ -1,0 +1,40 @@
+# Render blueprint: one Web Service serving both the JESKIN POS API and frontend.
+#
+# Deploy from the Render dashboard with "New -> Blueprint" against this repo, or
+# configure a single Node Web Service manually and set the marked env variables
+# (sync: false) yourself. Secrets are never stored in this file.
+services:
+  - type: web
+    name: jeskin-pos
+    runtime: node
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: DB_CONNECTION_LIMIT
+        value: 10
+      # JWT_SECRET: let Render generate a cryptographically random value.
+      - key: JWT_SECRET
+        generateValue: true
+      # Aiven MySQL connection details - set these in the Render dashboard
+      # (they are never committed to this repository).
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      # Optional: only needed to allow origins OTHER than the Render service's
+      # own domain (same-origin requests need no CORS configuration).
+      # To set it, use https://<your-service>.onrender.com - never '*'.
+      - key: CORS_ORIGIN
+        sync: false

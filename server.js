@@ -31,7 +31,9 @@ async function start() {
     );
   }
 
-  app.listen(PORT, () => {
+  // Bind 0.0.0.0 explicitly: Render routes traffic to the container's
+  // network interface on the port exposed via the PORT env variable.
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`JESKIN POS server listening on port ${PORT}`);
   });
 }

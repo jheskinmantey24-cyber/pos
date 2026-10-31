@@ -41,3 +41,29 @@ test('validateEnv should accept a complete secure config', () => {
 
   assert.deepEqual(issues, []);
 });
+
+test('validateEnv should accept a single-origin (same-domain) config without CORS_ORIGIN', () => {
+  const issues = validateEnv({
+    JWT_SECRET: 'super-secure-jwt-secret-1234567890',
+    DB_HOST: 'remote.aivencloud.com',
+    DB_PORT: '26074',
+    DB_USER: 'avnadmin',
+    DB_PASSWORD: 'secret-password',
+    DB_NAME: 'defaultdb',
+  });
+
+  assert.deepEqual(issues, []);
+});
+
+test('validateEnv should reject a wildcard CORS_ORIGIN', () => {
+  const issues = validateEnv({
+    JWT_SECRET: 'super-secure-jwt-secret-1234567890',
+    DB_HOST: 'localhost',
+    DB_PORT: '3306',
+    DB_USER: 'root',
+    DB_NAME: 'jeskin_pos',
+    CORS_ORIGIN: '*',
+  });
+
+  assert.ok(issues.includes('CORS_ORIGIN'));
+});

@@ -8,7 +8,10 @@ const requiredEnvKeys = [
   'DB_PORT',
   'DB_USER',
   'DB_NAME',
-  'CORS_ORIGIN',
+  // CORS_ORIGIN is intentionally NOT required: the Render deployment serves the
+  // frontend and API from a single origin, and same-origin requests need no CORS
+  // configuration. Set it only to allow additional third-party origins; the
+  // wildcard origin ('*') is still rejected below.
 ];
 
 const insecureJWTSecrets = new Set([
@@ -41,6 +44,12 @@ function validateEnv(env = process.env) {
 
   if (jwtSecret && String(jwtSecret).trim().length < 32) {
     issues.push('JWT_SECRET');
+  }
+
+  // Never allow an unrestricted wildcard CORS policy, even when explicitly configured.
+  const corsOrigin = String(env.CORS_ORIGIN || '');
+  if (corsOrigin.split(',').some((entry) => entry.trim() === '*')) {
+    issues.push('CORS_ORIGIN');
   }
 
   return issues;
