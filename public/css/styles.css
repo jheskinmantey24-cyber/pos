@@ -1089,3 +1089,75 @@ th {
   color: var(--muted);
   font-size: 0.9rem;
 }
+
+/* ============================================================
+   Mobile & touch hardening — phones render at correct scale
+   ============================================================ */
+
+/* Stop Android/Chrome "font boosting" that inflates text on phones. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Cleaner touch feedback on iOS. */
+body {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 700px) {
+  /* iOS zooms the whole page in when focusing any field whose font is
+     below 16px — pin form text at exactly 16px so taps never blow up
+     the viewport. */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Comfortable 44px minimum touch targets. */
+  input,
+  select,
+  .primary-btn,
+  .secondary-btn,
+  .logout-btn,
+  .category-chip {
+    min-height: 44px;
+  }
+
+  /* Concentrated data tables: shrink type and padding instead of raw
+     column widths (table-wrap handles horizontal scrolling). */
+  .table-wrap th,
+  .table-wrap td {
+    font-size: 0.88rem;
+    padding: 9px 7px;
+  }
+
+  /* Keep the receipt readable without overflowing the screen. */
+  .receipt-card {
+    padding: 16px 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  /* Product tiles: two comfortable columns on the narrowest phones. */
+  .product-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .product-tile {
+    padding: 9px 10px;
+  }
+
+  /* Modals fill nearly the full screen instead of overflowing. */
+  .modal-backdrop {
+    padding: 12px;
+  }
+
+  .modal-card {
+    padding: 18px 14px;
+    max-height: 88vh;
+    overflow-y: auto;
+  }
+}
